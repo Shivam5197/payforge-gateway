@@ -1,3 +1,14 @@
 spring:
   application:
     name: payforge-gateway
+  datasource:
+    url: jdbc:postgresql://localhost:5432/payforge
+    username: postgres
+    password: root
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+
+  flyway:
+    enabled: true
