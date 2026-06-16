@@ -22,10 +22,6 @@ public class MerchantServiceImpl implements MerchantService {
 
     private final MerchantRepository merchantRepository;
 
-    /**
-     * @param requestDTO
-     * @return
-     */
     @Override
     public MerchantResponseDTO createMerchant(CreateMerchantRequestDTO requestDTO) {
 
