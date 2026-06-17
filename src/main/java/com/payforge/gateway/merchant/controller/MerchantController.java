@@ -11,13 +11,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/merchants")
 @RequiredArgsConstructor
 public class MerchantController {
 
-    private final MerchantService service;
+    private final MerchantService merchantService;
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -26,13 +27,29 @@ public class MerchantController {
             @RequestBody
             CreateMerchantRequestDTO request) {
 
-        return service.createMerchant(request);
+        return merchantService.createMerchant(request);
     }
 
 
     @GetMapping
     @ResponseStatus(HttpStatus.FOUND)
     public List<Merchant> getAllMerchants() {
-        return service.findAllMerchants();
+        return merchantService.findAllMerchants();
+    }
+
+    @GetMapping("/{merchantId}")
+    public MerchantResponseDTO getMerchant(
+            @PathVariable UUID merchantId) {
+
+        return merchantService.getMerchantById(
+                merchantId);
+    }
+
+    @GetMapping("email/{email}")
+    public MerchantResponseDTO getMerchant(
+            @PathVariable String email) {
+
+        return merchantService.getMerchantByEmail(
+                email);
     }
 }
