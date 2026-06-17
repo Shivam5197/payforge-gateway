@@ -1,5 +1,7 @@
 package com.payforge.gateway.merchant.service.impl;
 
+import com.payforge.gateway.exceptions.merchant.MerchantAlreadyExistsException;
+import com.payforge.gateway.exceptions.merchant.MerchantNotFoundException;
 import com.payforge.gateway.merchant.dto.CreateMerchantRequestDTO;
 import com.payforge.gateway.merchant.dto.MerchantResponseDTO;
 import com.payforge.gateway.merchant.entity.Merchant;
@@ -7,6 +9,7 @@ import com.payforge.gateway.merchant.entity.MerchantStatus;
 import com.payforge.gateway.merchant.repository.MerchantRepository;
 import com.payforge.gateway.merchant.service.MerchantService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,8 +28,12 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     public MerchantResponseDTO createMerchant(CreateMerchantRequestDTO requestDTO) {
 
-        if (merchantRepository.existsByEmail(requestDTO.getEmail())) {
-            throw new RuntimeException("Merchant email Id already Exists! ");
+        if (merchantRepository.existsByEmail(
+                requestDTO.getEmail())) {
+
+            throw new MerchantAlreadyExistsException(
+                    "Merchant already exists with email: "
+                            + requestDTO.getEmail());
         }
 
         Merchant merchant = Merchant.builder().merchantName(requestDTO.getMerchantName())
@@ -50,5 +57,47 @@ public class MerchantServiceImpl implements MerchantService {
     @Override
     public List<Merchant> findAllMerchants() {
         return merchantRepository.findAll();
+    }
+
+    /**
+     * @param email
+     * @return
+     */
+    @Override
+    public MerchantResponseDTO getMerchantByEmail(String email) {
+
+        Merchant merchant = merchantRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new MerchantNotFoundException(
+                                "No Merchant Found with Email: " + email,
+                                HttpStatus.NOT_FOUND));
+
+        return MerchantResponseDTO.builder().
+                uuid(merchant.getId())
+                .email(merchant.getEmail())
+                .merchantName(merchant.getMerchantName())
+                .status(merchant.getStatus().name())
+                .build();
+    }
+
+    /**
+     * @param uuid
+     * @return
+     */
+    @Override
+    public MerchantResponseDTO getMerchantById(UUID uuid) {
+        Merchant merchant = merchantRepository.findById(uuid)
+                .orElseThrow(() ->
+                        new MerchantNotFoundException(
+                                "No Merchant Found with Given ID: " + uuid,
+                                HttpStatus.NOT_FOUND));
+
+
+        return MerchantResponseDTO.builder().
+                uuid(merchant.getId())
+                .email(merchant.getEmail())
+                .merchantName(merchant.getMerchantName())
+                .status(merchant.getStatus().name())
+                .build();
     }
 }
