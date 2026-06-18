@@ -1,5 +1,6 @@
 package com.payforge.gateway.common.exception;
 
+import com.payforge.gateway.apikey.exception.InvalidAPIKeyException;
 import com.payforge.gateway.common.dto.ErrorResponse;
 import com.payforge.gateway.exceptions.merchant.MerchantAlreadyExistsException;
 import com.payforge.gateway.exceptions.merchant.MerchantNotFoundException;
@@ -82,6 +83,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse);
     }
+
+    @ExceptionHandler(InvalidAPIKeyException.class)
+    public ResponseEntity<ErrorResponse> invalidAPIKeyExceptionHandler(
+            InvalidAPIKeyException ex){
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .errorCode("INVALID_API_KEY")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+    }
+
 
 
 }

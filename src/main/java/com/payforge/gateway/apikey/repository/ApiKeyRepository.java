@@ -10,4 +10,5 @@ public interface ApiKeyRepository
         extends JpaRepository<ApiKey, UUID> {
 
     Optional<ApiKey> findByKeyHash(String keyHash);
+
 }

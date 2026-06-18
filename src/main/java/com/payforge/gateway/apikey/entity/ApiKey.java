@@ -1,5 +1,6 @@
 package com.payforge.gateway.apikey.entity;
 
+import com.payforge.gateway.merchant.entity.Merchant;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,8 +19,9 @@ public class ApiKey {
     @Id
     private UUID id;
 
-    @Column(nullable = false)
-    private UUID merchantId;
+    @ManyToOne
+    @JoinColumn(name = "merchant_id")
+    private Merchant merchant;
 
     @Column(nullable = false, unique = true, length = 128)
     private String keyHash;
