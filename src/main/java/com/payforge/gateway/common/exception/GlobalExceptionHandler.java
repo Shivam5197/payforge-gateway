@@ -45,6 +45,27 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(response);
     }
+/* Uncomment this for debugging
+
+ */
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<ErrorResponse> handleException(
+//            Exception ex) {
+//
+//        ex.printStackTrace();
+//
+//        ErrorResponse response =
+//                ErrorResponse.builder()
+//                        .errorCode("INTERNAL_SERVER_ERROR")
+//                        .message(ex.getMessage())
+//                        .timestamp(LocalDateTime.now())
+//                        .build();
+//
+//        return ResponseEntity
+//                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                .body(response);
+//    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(

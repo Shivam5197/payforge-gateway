@@ -2,6 +2,8 @@ package com.payforge.gateway.apikey.controller;
 
 import com.payforge.gateway.apikey.dto.GenerateApiKeyResponseDTO;
 import com.payforge.gateway.apikey.service.APIKeyService;
+import com.payforge.gateway.common.security.MerchantContext;
+import com.payforge.gateway.merchant.entity.Merchant;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -25,15 +27,4 @@ public class ApiKeyController {
                 .generateApiKey(merchantId);
     }
 
-
-    @RestController
-    @RequestMapping("/api/v1/test")
-    public class TestController {
-
-        @GetMapping
-        public String test() {
-
-            return "Authenticated";
-        }
-    }
 }

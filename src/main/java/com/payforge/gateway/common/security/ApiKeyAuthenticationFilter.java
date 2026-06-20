@@ -47,17 +47,21 @@ public class ApiKeyAuthenticationFilter   extends OncePerRequestFilter {
                 HashUtil.sha256(apiKey);
 
         ApiKey storedKey =
-                apiKeyRepository
-                        .findByKeyHash(keyHash)
-                        .orElseThrow(() ->
-                                new InvalidAPIKeyException(
-                                        "Invalid API Key"));
+                apiKeyRepository.findByKeyHash(keyHash)
+                        .orElseThrow(() -> new InvalidAPIKeyException("Invalid API Key"));
+
+        MerchantContext.set(
+                storedKey.getMerchant());
 
         if (!storedKey.isActive()) {
             throw new InvalidAPIKeyException(
                     "API Key is inactive");
         }
-        filterChain.doFilter(request,response);
+        try {
+            filterChain.doFilter(request, response);
+        } finally {
+            MerchantContext.clear();
+        }
     }
 
     private boolean isPublicEndpoint(
