@@ -1,5 +1,6 @@
 package com.payforge.gateway.common.exception;
 
+import com.payforge.gateway.apikey.exception.InvalidAPIKeyException;
 import com.payforge.gateway.common.dto.ErrorResponse;
 import com.payforge.gateway.exceptions.merchant.MerchantAlreadyExistsException;
 import com.payforge.gateway.exceptions.merchant.MerchantNotFoundException;
@@ -44,6 +45,27 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(response);
     }
+/* Uncomment this for debugging
+
+ */
+//    @ExceptionHandler(Exception.class)
+//    public ResponseEntity<ErrorResponse> handleException(
+//            Exception ex) {
+//
+//        ex.printStackTrace();
+//
+//        ErrorResponse response =
+//                ErrorResponse.builder()
+//                        .errorCode("INTERNAL_SERVER_ERROR")
+//                        .message(ex.getMessage())
+//                        .timestamp(LocalDateTime.now())
+//                        .build();
+//
+//        return ResponseEntity
+//                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+//                .body(response);
+//    }
+
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
@@ -82,6 +104,20 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse);
     }
+
+    @ExceptionHandler(InvalidAPIKeyException.class)
+    public ResponseEntity<ErrorResponse> invalidAPIKeyExceptionHandler(
+            InvalidAPIKeyException ex){
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .errorCode("INVALID_API_KEY")
+                .message(ex.getMessage())
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(errorResponse);
+    }
+
 
 
 }
