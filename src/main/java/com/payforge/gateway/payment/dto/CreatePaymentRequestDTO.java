@@ -13,8 +13,11 @@ public class CreatePaymentRequestDTO {
     @Positive
     private Long amount;
 
+    @NotNull
+    private Currency currency;
+
     @NotBlank
-    private String currency;
+    private String idempotencyKey;
 
     private String description;
 }

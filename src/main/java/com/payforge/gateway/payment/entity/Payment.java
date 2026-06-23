@@ -1,6 +1,7 @@
 package com.payforge.gateway.payment.entity;
 
 import com.payforge.gateway.merchant.entity.Merchant;
+import com.payforge.gateway.payment.dto.Currency;
 import com.payforge.gateway.payment.dto.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -32,8 +33,12 @@ public class Payment {
     @Column(nullable = false)
     private Long amount;
 
-    @Column(nullable = false, length = 3)
-    private String currency;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Currency currency;
+
+    @Column(nullable = false, unique = true)
+    private String idempotencyKey;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

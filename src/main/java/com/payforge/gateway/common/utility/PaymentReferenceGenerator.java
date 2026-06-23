@@ -1,5 +1,7 @@
 package com.payforge.gateway.common.utility;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.UUID;
 
 public final class PaymentReferenceGenerator {
@@ -9,6 +11,8 @@ public final class PaymentReferenceGenerator {
 
     public static String generate() {
 
+        String date = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
+
         String random =
                 UUID.randomUUID()
                         .toString()
@@ -16,6 +20,6 @@ public final class PaymentReferenceGenerator {
                         .substring(0, 8)
                         .toUpperCase();
 
-        return "PAY_" + random;
+        return "PAY_"+ date +"_"+ random;
     }
 }

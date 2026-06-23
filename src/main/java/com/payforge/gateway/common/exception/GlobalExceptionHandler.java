@@ -4,6 +4,8 @@ import com.payforge.gateway.apikey.exception.InvalidAPIKeyException;
 import com.payforge.gateway.common.dto.ErrorResponse;
 import com.payforge.gateway.exceptions.merchant.MerchantAlreadyExistsException;
 import com.payforge.gateway.exceptions.merchant.MerchantNotFoundException;
+import com.payforge.gateway.payment.exception.InvalidPaymentException;
+import com.payforge.gateway.payment.exception.PaymentNotFoundException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -30,34 +32,14 @@ public class GlobalExceptionHandler {
                 .body(response);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleException(
-            Exception ex) {
-
-        ErrorResponse response =
-                ErrorResponse.builder()
-                        .errorCode("INTERNAL_SERVER_ERROR")
-                        .message("Something went wrong")
-                        .timestamp(LocalDateTime.now())
-                        .build();
-
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(response);
-    }
-/* Uncomment this for debugging
-
- */
 //    @ExceptionHandler(Exception.class)
 //    public ResponseEntity<ErrorResponse> handleException(
 //            Exception ex) {
 //
-//        ex.printStackTrace();
-//
 //        ErrorResponse response =
 //                ErrorResponse.builder()
 //                        .errorCode("INTERNAL_SERVER_ERROR")
-//                        .message(ex.getMessage())
+//                        .message("Something went wrong")
 //                        .timestamp(LocalDateTime.now())
 //                        .build();
 //
@@ -65,6 +47,26 @@ public class GlobalExceptionHandler {
 //                .status(HttpStatus.INTERNAL_SERVER_ERROR)
 //                .body(response);
 //    }
+/* Uncomment this for debugging
+
+ */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(
+            Exception ex) {
+
+        ex.printStackTrace();
+
+        ErrorResponse response =
+                ErrorResponse.builder()
+                        .errorCode("INTERNAL_SERVER_ERROR")
+                        .message(ex.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .build();
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(response);
+    }
 
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -116,6 +118,34 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                 .body(errorResponse);
+    }
+
+    @ExceptionHandler(InvalidPaymentException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidPayment(InvalidPaymentException ex) {
+        ErrorResponse response =
+                ErrorResponse.builder()
+                        .errorCode("INVALID_PAYMENT")
+                        .message(ex.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .build();
+
+        return ResponseEntity
+                .badRequest()
+                .body(response);
+    }
+
+    @ExceptionHandler(PaymentNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleNotFoundPayment(PaymentNotFoundException ex) {
+        ErrorResponse response =
+                ErrorResponse.builder()
+                        .errorCode("PAYMENT_NOT_FOUND")
+                        .message(ex.getMessage())
+                        .timestamp(LocalDateTime.now())
+                        .build();
+
+        return ResponseEntity
+                .badRequest()
+                .body(response);
     }
 
 
