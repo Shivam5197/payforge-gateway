@@ -10,6 +10,7 @@ import com.payforge.gateway.payment.exception.InvalidPaymentException;
 import com.payforge.gateway.payment.exception.PaymentNotFoundException;
 import com.payforge.gateway.payment.repository.PaymentRepository;
 import com.payforge.gateway.payment.service.PaymentService;
+import com.payforge.gateway.paymentevent.service.PaymentEventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -27,6 +28,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
 
+    private final PaymentEventService paymentEventService;
 
     @Override
     public PaymentResponseDTO createPayment(CreatePaymentRequestDTO request) {
@@ -51,7 +53,7 @@ public class PaymentServiceImpl implements PaymentService {
         Optional<Payment> existingPayment = paymentRepository
                 .findByIdempotencyKey(request.getIdempotencyKey());
 
-        if(existingPayment.isPresent()){
+        if (existingPayment.isPresent()) {
             Payment payment = existingPayment.get();
 
             return mapToResponse(payment);
@@ -71,6 +73,9 @@ public class PaymentServiceImpl implements PaymentService {
 
         Payment saved =
                 paymentRepository.save(payment);
+
+        paymentEventService
+                .publishPaymentCreated(saved);
 
         return mapToResponse(payment);
     }
@@ -156,9 +161,7 @@ public class PaymentServiceImpl implements PaymentService {
     public ProcessPaymentResponseDTO processPayment(UUID paymentId) {
 
         Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(() ->
-                        new PaymentNotFoundException(
-                                "Payment not found"));
+                .orElseThrow(() -> new PaymentNotFoundException("Payment not found"));
 
         // Prevent re-processing
         if (payment.getStatus() == PaymentStatus.SUCCESS
@@ -168,28 +171,31 @@ public class PaymentServiceImpl implements PaymentService {
                     "Payment already processed");
         }
 
+        PaymentStateValidator.validatePaymentStatus(payment);
         payment.setStatus(PaymentStatus.PROCESSING);
         paymentRepository.save(payment);
 
+        paymentEventService.publishPaymentProcessing(payment);
+
         // SIMULATE PAYMENT GATEWAY
-        boolean success = ThreadLocalRandom.current()
-                .nextInt(100) < 90;
+        boolean success = ThreadLocalRandom.current().nextInt(100) < 90;
 
         String responseCode;
         String responseMessage;
 
         if (success) {
             payment.setStatus(PaymentStatus.SUCCESS);
+            paymentRepository.save(payment);
+            paymentEventService.publishPaymentSucceeded(payment);
             responseCode = "00";
             responseMessage = "Approved";
         } else {
             payment.setStatus(PaymentStatus.FAILED);
+            paymentRepository.save(payment);
+            paymentEventService.publishPaymentFailed(payment);
             responseCode = "05";
             responseMessage = "Do Not Honor";
         }
-
-        paymentRepository.save(payment);
-
         return ProcessPaymentResponseDTO.builder()
                 .paymentId(payment.getId())
                 .paymentReference(payment.getPaymentReference())

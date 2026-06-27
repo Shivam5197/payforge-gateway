@@ -31,14 +31,14 @@ public class PaymentController {
                 .createPayment(request);
     }
 
-//    @GetMapping("/{paymentId}")
-//    public PaymentResponseDTO
-//    getPayment(
-//            @PathVariable UUID paymentId) {
-//
-//        return paymentService
-//                .getPaymentById(paymentId);
-//    }
+    @GetMapping("/{paymentId}/id")
+    public PaymentResponseDTO
+    getPayment(
+            @PathVariable UUID paymentId) {
+
+        return paymentService
+                .getPaymentById(paymentId);
+    }
 
     @GetMapping("/{paymentReference}")
     public PaymentResponseDTO
