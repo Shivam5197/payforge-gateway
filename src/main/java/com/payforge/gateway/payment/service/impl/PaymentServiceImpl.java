@@ -8,6 +8,8 @@ import com.payforge.gateway.payment.dto.*;
 import com.payforge.gateway.payment.entity.Payment;
 import com.payforge.gateway.payment.exception.InvalidPaymentException;
 import com.payforge.gateway.payment.exception.PaymentNotFoundException;
+import com.payforge.gateway.payment.processor.PaymentProcessingResult;
+import com.payforge.gateway.payment.processor.PaymentProcessor;
 import com.payforge.gateway.payment.repository.PaymentRepository;
 import com.payforge.gateway.payment.service.PaymentService;
 import com.payforge.gateway.paymentevent.service.PaymentEventService;
@@ -27,7 +29,7 @@ import java.util.concurrent.ThreadLocalRandom;
 public class PaymentServiceImpl implements PaymentService {
 
     private final PaymentRepository paymentRepository;
-
+    private final PaymentProcessor paymentProcessor;
     private final PaymentEventService paymentEventService;
 
     @Override
@@ -41,17 +43,14 @@ public class PaymentServiceImpl implements PaymentService {
         }
 
         if (request.getAmount() < 100) {
-            throw new InvalidPaymentException(
-                    "Minimum amount is 100");
+            throw new InvalidPaymentException("Minimum amount is 100");
         }
 
         if (request.getAmount() > 10_000_000) {
-            throw new InvalidPaymentException(
-                    "Maximum amount exceeded");
+            throw new InvalidPaymentException("Maximum amount exceeded");
         }
 
-        Optional<Payment> existingPayment = paymentRepository
-                .findByIdempotencyKey(request.getIdempotencyKey());
+        Optional<Payment> existingPayment = paymentRepository.findByIdempotencyKey(request.getIdempotencyKey());
 
         if (existingPayment.isPresent()) {
             Payment payment = existingPayment.get();
@@ -65,7 +64,8 @@ public class PaymentServiceImpl implements PaymentService {
                         .merchant(merchant)
                         .paymentReference(PaymentReferenceGenerator.generate())
                         .amount(request.getAmount())
-                        .idempotencyKey(request.getIdempotencyKey())
+     //                   .idempotencyKey(request.getIdempotencyKey())
+                        .idempotencyKey(idempotencyKeyGenerator())
                         .currency(request.getCurrency())
                         .description(request.getDescription())
                         .status(PaymentStatus.CREATED)
@@ -144,14 +144,11 @@ public class PaymentServiceImpl implements PaymentService {
             Payment payment) {
         return PaymentResponseDTO.builder()
                 .paymentId(payment.getId())
-                .paymentReference(
-                        payment.getPaymentReference())
+                .paymentReference(payment.getPaymentReference())
                 .amount(payment.getAmount())
                 .idempotencyKey(payment.getIdempotencyKey())
-                .currency(
-                        Currency.valueOf(payment.getCurrency().name()))
-                .status(
-                        payment.getStatus().name())
+                .currency(Currency.valueOf(payment.getCurrency().name()))
+                .status(payment.getStatus().name())
                 .build();
     }
 
@@ -166,9 +163,7 @@ public class PaymentServiceImpl implements PaymentService {
         // Prevent re-processing
         if (payment.getStatus() == PaymentStatus.SUCCESS
                 || payment.getStatus() == PaymentStatus.FAILED) {
-
-            throw new InvalidPaymentException(
-                    "Payment already processed");
+            throw new InvalidPaymentException("Payment already processed");
         }
 
         PaymentStateValidator.validatePaymentStatus(payment);
@@ -178,12 +173,12 @@ public class PaymentServiceImpl implements PaymentService {
         paymentEventService.publishPaymentProcessing(payment);
 
         // SIMULATE PAYMENT GATEWAY
-        boolean success = ThreadLocalRandom.current().nextInt(100) < 90;
+        PaymentProcessingResult result = paymentProcessor.process(payment);
 
-        String responseCode;
-        String responseMessage;
+        String responseCode = result.getResponseCode();
+        String responseMessage = result.getResponseMessage();
 
-        if (success) {
+        if (result.getStatus() == PaymentStatus.SUCCESS) {
             payment.setStatus(PaymentStatus.SUCCESS);
             paymentRepository.save(payment);
             paymentEventService.publishPaymentSucceeded(payment);
@@ -204,4 +199,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .gatewayMessage(responseMessage)
                 .build();
     }
+
+    private String idempotencyKeyGenerator() {
+        return "Order-" + ThreadLocalRandom.current().nextInt(100, 1000);
+    }
+
 }
